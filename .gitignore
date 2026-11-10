@@ -1,0 +1,11 @@
+configure/RELEASE.local
+bin/
+db/
+dbd/
+include/
+lib/
+**/O.*/
+.venv/
+__pycache__/
+venv/
+envPaths
