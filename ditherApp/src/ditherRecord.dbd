@@ -1,0 +1,85 @@
+menu(ditherEN) {
+    choice(ditherEN_Off, "Disabled")
+    choice(ditherEN_On, "Enabled")
+}
+menu(ditherSTAT) {
+    choice(ditherSTAT_Idle, "Idle")
+    choice(ditherSTAT_Dithering, "Dithering")
+    choice(ditherSTAT_Returning, "Returning")
+    choice(ditherSTAT_Fault, "Fault")
+}
+recordtype(dither) {
+    include "dbCommon.dbd"
+    field(VAL, DBF_MENU) {
+        prompt("Enable dithering")
+        promptgroup("50 - Output")
+        asl(ASL0)
+        pp(TRUE)
+        menu(ditherEN)
+    }
+    field(VELO, DBF_DOUBLE) {
+        prompt("Dither velocity")
+        promptgroup("50 - Output")
+        asl(ASL0)
+    }
+    field(PLUS, DBF_DOUBLE) {
+        prompt("Distance above centre")
+        promptgroup("50 - Output")
+        asl(ASL0)
+        special(100)
+    }
+    field(MINUS, DBF_DOUBLE) {
+        prompt("Distance below centre")
+        promptgroup("50 - Output")
+        asl(ASL0)
+        special(100)
+    }
+    field(CEN, DBF_DOUBLE) {
+        prompt("Saved centre (setpoint)")
+        special(SPC_NOMOD)
+    }
+    field(ACK, DBF_MENU) {
+        prompt("Acknowledge fault")
+        asl(ASL0)
+        pp(TRUE)
+        menu(menuYesNo)
+    }
+    field(ERR, DBF_STRING) {
+        prompt("Last error")
+        special(SPC_NOMOD)
+        size(40)
+    }
+    field(STATE, DBF_MENU) {
+        prompt("Dither state")
+        special(SPC_NOMOD)
+        menu(ditherSTAT)
+    }
+    field(PREC, DBF_SHORT) {
+        prompt("Display precision")
+        promptgroup("80 - Display")
+        interest(1)
+    }
+    field(EGU, DBF_STRING) {
+        prompt("Engineering units")
+        promptgroup("80 - Display")
+        interest(1)
+        size(16)
+    }
+    field(MSTP, DBF_INLINK) { prompt("Motor STOP") promptgroup("40 - Input") interest(2) }
+    field(MVAL, DBF_INLINK) { prompt("Motor VAL") promptgroup("40 - Input") interest(2) }
+    field(MVEL, DBF_INLINK) { prompt("Motor VELO") promptgroup("40 - Input") interest(2) }
+    field(MVBS, DBF_INLINK) { prompt("Motor VBAS") promptgroup("40 - Input") interest(2) }
+    field(MVMX, DBF_INLINK) { prompt("Motor VMAX") promptgroup("40 - Input") interest(2) }
+    field(MDMV, DBF_INLINK) { prompt("Motor DMOV") promptgroup("40 - Input") interest(2) }
+    field(MMVN, DBF_INLINK) { prompt("Motor MOVN") promptgroup("40 - Input") interest(2) }
+    field(MLLM, DBF_INLINK) { prompt("Motor LLM") promptgroup("40 - Input") interest(2) }
+    field(MHLM, DBF_INLINK) { prompt("Motor HLM") promptgroup("40 - Input") interest(2) }
+    field(MDLL, DBF_INLINK) { prompt("Motor DLLM") promptgroup("40 - Input") interest(2) }
+    field(MDHL, DBF_INLINK) { prompt("Motor DHLM") promptgroup("40 - Input") interest(2) }
+    field(MMST, DBF_INLINK) { prompt("Motor MSTA") promptgroup("40 - Input") interest(2) }
+    field(MSET, DBF_INLINK) { prompt("Motor SET") promptgroup("40 - Input") interest(2) }
+    field(MSPM, DBF_INLINK) { prompt("Motor SPMG") promptgroup("40 - Input") interest(2) }
+    field(MLVI, DBF_INLINK) { prompt("Motor LVIO") promptgroup("40 - Input") interest(2) }
+    field(MMIS, DBF_INLINK) { prompt("Motor MISS") promptgroup("40 - Input") interest(2) }
+    field(MRES, DBF_INLINK) { prompt("Motor MRES") promptgroup("40 - Input") interest(2) }
+}

@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Saved on 2026-11-10 17:02:32 by a5497-->
+<display version="2.0.0">
+  <name>Dither Options</name>
+  <x>10</x>
+  <y>10</y>
+  <width>188</width>
+  <height>448</height>
+  <grid_visible>false</grid_visible>
+  <grid_step_x>5</grid_step_x>
+  <widget type="textentry" version="3.0.0">
+    <name>text entry #74_1</name>
+    <pv_name>$(P)$(M):DITHER.VELO</pv_name>
+    <x>80</x>
+    <y>163</y>
+    <width>98</width>
+    <height>25</height>
+    <font>
+      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      </font>
+    </font>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+    <format>1</format>
+    <show_units>false</show_units>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_1</name>
+    <text>Velocity:</text>
+    <y>163</y>
+    <width>70</width>
+    <height>25</height>
+    <horizontal_alignment>2</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="textentry" version="3.0.0">
+    <name>text entry #74_2</name>
+    <pv_name>$(P)$(M):DITHER.MINUS</pv_name>
+    <x>70</x>
+    <y>128</y>
+    <width>35</width>
+    <height>25</height>
+    <font>
+      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      </font>
+    </font>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+    <format>1</format>
+    <show_units>false</show_units>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_2</name>
+    <text>Minus:</text>
+    <y>128</y>
+    <width>60</width>
+    <height>25</height>
+    <horizontal_alignment>2</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_8</name>
+    <text>DITHERING OPTIONS</text>
+    <width>188</width>
+    <height>25</height>
+    <font>
+      <font name="Header 3" family="Liberation Sans" style="BOLD" size="16.0">
+      </font>
+    </font>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="textentry" version="3.0.0">
+    <name>text entry #74_8</name>
+    <pv_name>$(P)$(M):DITHER.PLUS</pv_name>
+    <x>146</x>
+    <y>128</y>
+    <width>35</width>
+    <height>25</height>
+    <font>
+      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      </font>
+    </font>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+    <format>1</format>
+    <show_units>false</show_units>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_9</name>
+    <text>Plus:</text>
+    <x>105</x>
+    <y>128</y>
+    <width>41</width>
+    <height>25</height>
+    <horizontal_alignment>2</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_11</name>
+    <text>Center:</text>
+    <y>198</y>
+    <width>70</width>
+    <height>25</height>
+    <horizontal_alignment>2</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_13</name>
+    <text>Faults:</text>
+    <x>20</x>
+    <y>275</y>
+    <width>145</width>
+    <height>25</height>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Acknowledge fault</name>
+    <actions>
+      <action type="write_pv">
+        <description>Acknowledge fault</description>
+        <pv_name>$(P)$(M):DITHER.ACK</pv_name>
+        <value>1</value>
+      </action>
+    </actions>
+    <text>Reset fault</text>
+    <x>30</x>
+    <y>238</y>
+    <width>120</width>
+    <height>25</height>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_14</name>
+    <text>Status:</text>
+    <x>10</x>
+    <y>94</y>
+    <width>70</width>
+    <height>25</height>
+    <horizontal_alignment>2</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Text Update</name>
+    <pv_name>$(P)$(M):DITHER.STATE</pv_name>
+    <x>80</x>
+    <y>94</y>
+    <width>98</width>
+    <height>25</height>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Text Update_1</name>
+    <pv_name>$(P)$(M):DITHER.ERR</pv_name>
+    <x>30</x>
+    <y>309</y>
+    <width>145</width>
+    <height>110</height>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Text Update_2</name>
+    <pv_name>$(P)$(M):DITHER.CEN</pv_name>
+    <x>80</x>
+    <y>198</y>
+    <width>98</width>
+    <height>25</height>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="choice" version="2.0.0">
+    <name>Choice Button</name>
+    <pv_name>$(P)$(M):DITHER</pv_name>
+    <x>21</x>
+    <y>40</y>
+    <width>150</width>
+    <height>25</height>
+    <items>
+      <item>Item 1</item>
+      <item>Item 2</item>
+    </items>
+  </widget>
+</display>

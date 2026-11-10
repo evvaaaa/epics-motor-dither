@@ -1,0 +1,7 @@
+file "$(MOTOR)/db/basic_asyn_motor.db"
+{
+pattern
+{P,      M,  DTYP,        PORT,       ADDR, DESC,                EGU, DIR, VELO, VBAS, ACCL, BDST, BVEL, BACC, MRES, PREC, DHLM, DLLM, INIT}
+{DEMO:,  m1, "asynMotor", motorSim1,  0,    "Dither demo X",     mm,  Pos, 4,    0.1,  0.5,  0,    4,    0.5,  0.01, 3,    10,   -10,  ""}
+{DEMO:,  m2, "asynMotor", motorSim1,  1,    "Dither demo Y",     mm,  Pos, 4,    0.1,  0.5,  0,    4,    0.5,  0.01, 3,    10,   -10,  ""}
+}

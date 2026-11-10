@@ -1,0 +1,2 @@
+# Set EPICS_BASE in RELEASE.local.
+-include $(TOP)/configure/RELEASE.local

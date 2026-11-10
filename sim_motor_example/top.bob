@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Saved on 2026-11-10 16:54:04 by a5497-->
+<display version="2.0.0">
+  <name>Sim Motor Dithering</name>
+  <macros>
+    <P>DEMO:</P>
+  </macros>
+  <width>500</width>
+  <height>740</height>
+  <actions>
+  </actions>
+  <widget type="rectangle" version="2.0.0">
+    <name>Rectangle_2</name>
+    <width>500</width>
+    <height>740</height>
+    <line_color>
+      <color name="Header_Background" red="77" green="77" blue="77">
+      </color>
+    </line_color>
+    <background_color>
+      <color name="Transparent" red="255" green="255" blue="255" alpha="0">
+      </color>
+    </background_color>
+  </widget>
+  <widget type="rectangle" version="2.0.0">
+    <name>Rectangle_1</name>
+    <width>500</width>
+    <height>60</height>
+    <line_color>
+      <color name="Header_Background" red="77" green="77" blue="77">
+      </color>
+    </line_color>
+    <background_color>
+      <color red="179" green="230" blue="179">
+      </color>
+    </background_color>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_2</name>
+    <text>Sim Motor Dithering</text>
+    <width>430</width>
+    <height>60</height>
+    <font>
+      <font name="Header 1" family="Liberation Sans" style="BOLD" size="22.0">
+      </font>
+    </font>
+    <background_color>
+      <color name="INVALID" red="255" green="0" blue="255">
+      </color>
+    </background_color>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>Embedded Display_1</name>
+    <macros>
+      <M>m1</M>
+      <P>$(P)</P>
+    </macros>
+    <file>motorx.bob</file>
+    <x>40</x>
+    <y>90</y>
+    <width>116</width>
+    <height>176</height>
+    <resize>2</resize>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>Embedded Display_2</name>
+    <macros>
+      <M>m2</M>
+      <P>$(P)</P>
+    </macros>
+    <file>motorx.bob</file>
+    <x>280</x>
+    <y>90</y>
+    <width>116</width>
+    <height>176</height>
+    <resize>2</resize>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>Embedded Display_3</name>
+    <macros>
+      <M>m2</M>
+      <P>$(P)</P>
+    </macros>
+    <file>dither_options.bob</file>
+    <x>260</x>
+    <y>275</y>
+    <width>188</width>
+    <height>448</height>
+    <resize>2</resize>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>Embedded Display_4</name>
+    <macros>
+      <M>m1</M>
+      <P>$(P)</P>
+    </macros>
+    <file>dither_options.bob</file>
+    <x>10</x>
+    <y>275</y>
+    <width>188</width>
+    <height>448</height>
+    <resize>2</resize>
+  </widget>
+</display>
