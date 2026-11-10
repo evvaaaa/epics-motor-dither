@@ -4,6 +4,8 @@ EPICS IOC support for oscillating an existing motor record around its saved
 user-coordinate setpoint. Each motor needs one instance of the database.
 The motor and the dither records **must be in the same IOC**.
 
+![Demo](./sim_motor_example/output.gif)
+
 ## Build and integrate
 
 1) Create a `RELEASE.local` with `EPICS_BASE` and `MOTORDITHER` set to this directory.
