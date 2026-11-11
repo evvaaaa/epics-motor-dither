@@ -1,23 +1,49 @@
 # EPICS motor dither record
 
-EPICS IOC support for oscillating an existing motor record around its saved
-user-coordinate setpoint. Each motor needs one instance of the database.
-The motor and the dither records **must be in the same IOC**.
+
+The dither record is an EPICS record for _dithering_ - oscillating an existing motor record around its setpoint for the purposes of beam protection.
+
+## Purpose of Dithering
+
+**If your beam is smaller than your sample, why fry your sample?**
 
 ![Demo](./sim_motor_example/output.gif)
+
+With spectroscopy scans of certain types of techniques e.g absorption, electrocatalysis, the sample is damaged over time by the x-ray beam as it is being measured. Certain samples can be protected by "dithering" the manipulator motor - periodically moving about it's set point in the center of the sample to spread out the surface being measured during the experiment.
+
+## Operation
+
+A dither record `$(P):DITHER` can be supplied for any epics motor record `$(P)`.
+
+| PV | Meaning |
+| --- | --- |
+| `$(P):DITHER` | The amount the motor is currently dithered - the motor `.RBV` minus `.CEN` (read-only). |
+| `$(P):DITHER.STATE` | One of `Idle`, `Dithering`, `Returning`, `Fault` (read-only). |
+| `$(P):DITHER.START` | Write 1 to start dithering (accepted only from `Idle`). |
+| `$(P):DITHER.STOP` | Write 1 to stop and return to the center (wins over `.START`; also clears a fault). |
+| `$(P):DITHER.PLUS` | Distance above `.CEN` in the motor should travel while dithering, at least 0. On set `.ABS` is set to `.MINUS + .PLUS`. |
+| `$(P):DITHER.MINUS` | Distance below `.CEN` the motor should tracel while dithering, at least 0. On set `.ABS` is set to `.MINUS + .PLUS`. |
+| `$(P):DITHER.ABS` | Total range to dither on this axis. On set `.MINUS = .PLUS = .ABS / 2` is set. |
+| `$(P):DITHER.VELO` | Positive dither velocity in motor user units per second. |
+| `$(P):DITHER.CEN` | Center of the dither (read-only). Follows the motor `.VAL` while not dithering, and follows any new `.VAL` put to the motor during dithering. |
+| `$(P):DITHER.ERR` | Last fault description (read-only). Kept until the next fault replaces it, and cleared when dithering starts successfully again. |
+
+## Important Notes
+
+* After dithering is stopped a motor record will always return to `.CEN`.
+* Acceleration is the same as the motor acceleration, e.g `.ACCS` of the motor.
+* If a different `.VAL` is put to the motor by the user during dithering, the motor moves there and then dithers about that new value: `:DITHER.CEN`.
+* To recover from a fault (a `.STATE` of `Fault`, with `.ERR` saying why) write 1 to `:DITHER.STOP`. Once the motor has stopped the state returns to `Idle` and dithering can be started again.
+* **Use soft limits!** Soft limits are respected by the dither record. If the dither is on the boundary then the movement will take place up until the soft limit, but not move over. If the soft limits change to inside the dither radius during dithering then a fault will be made and dithering will stop.
+
 
 ## Build and integrate
 
 1) Create a `RELEASE.local` with `EPICS_BASE` and `MOTORDITHER` set to this directory.
 
-2) Add the dbd and libs to your IOC:
+2) Add `motorDither.dbd` the dbd and `motorDither` to the libs of your IOC:
 
-```make
-myIoc_DBD += motorDither.dbd
-myIoc_LIBS += motorDither
-```
-
-3) Before `iocInit`, after loading the motor record, load:
+3) Before `iocInit` but after loading the motor record, load:
 
 ```iocsh
 dbLoadRecords("$(MOTORDITHER)/db/motorDither.db", "P=IOC:m1")
@@ -25,26 +51,7 @@ dbLoadRecords("$(MOTORDITHER)/db/motorDither.db", "P=IOC:m1")
 
 Replace `IOC:m1` with your EPICS motor record.
 
-## Operation
 
-One `dither` record per motor, named `$(P):DITHER`.
-
-| PV | Meaning |
-| --- | --- |
-| `$(P):DITHER` | `"Enabled"` starts dithering; `"Disabled"` stops and returns to the saved center. |
-| `$(P):DITHER.PLUS` | Distance above center in motor user units, at least 0 (negative writes clamp to 0). |
-| `$(P):DITHER.MINUS` | Distance below center in motor user units, at least 0 (negative writes clamp to 0). |
-| `$(P):DITHER.VELO` | Positive dither velocity in motor user units per second. |
-| `$(P):DITHER.CEN` | Saved motor `.VAL` at enable time (read-only). |
-| `$(P):DITHER.STATE` | Menu: Idle, Dithering, Returning, Fault (read-only). |
-| `$(P):DITHER.ERR` | Fault description, empty when acknowledged (read-only). |
-| `$(P):DITHER.ACK` | Write 1 to acknowledge a fault; the record clears it again. |
-
-## Important Notes
-
-* Acceleration is the same as the motor acceleration, e.g `.ACCS` of the motor.
-* Once dithering, the motor will always move back to the center and dither about it. If a different `.VAL` is put to during dithering, the motor will move towards it, but then move back to `:DITHER.CEN` and continue dithering as usual. To move to a new position dithering must be stopped.
-* **Use soft limits!** Soft limits are respected by the dither record. If the dither is on the boundary then the movement will take place up until the soft limit, but not move over. If the soft limits change to inside the dither radius during dithering then a fault will be made and dithering will stop.
 
 ## Simulator example
 

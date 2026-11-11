@@ -38,12 +38,12 @@ enum phase { IDLE, DITHER, STOPPING, RETURNING, FAULT };
 typedef struct {
     enum phase phase;
     double center, plus, minus, old_velocity, target;
-    int direction, owns_velocity, stop_sent;
+    int direction, owns_velocity, stop_sent, enabled;
 } Dither;
 
 /* Snapshot of the motor fields the controller needs. */
 typedef struct {
-    double val, velo, vbas, vmax, llm, hlm, mres;
+    double val, rbv, velo, vbas, vmax, llm, hlm, mres;
     epicsInt32 dmov, movn, set, spmg, lvio, miss, limits;
     epicsUInt32 msta;
 } Motor;
@@ -77,9 +77,14 @@ epicsExportAddress(rset, ditherRSET);
 static long get_precision(const struct dbAddr *paddr, long *precision)
 {
     ditherRecord *prec = (ditherRecord *)paddr->precord;
+    short motor_prec;
     *precision = prec->prec;
-    if (dbGetFieldIndex(paddr) == ditherRecordVAL)
-        return 0;
+    /* follow the motor record's PREC */
+    if (prec->mpre.type == DB_LINK &&
+        !dbGetLink(&prec->mpre, DBR_SHORT, &motor_prec, 0, 0)) {
+        prec->prec = motor_prec;
+        *precision = motor_prec;
+    }
     recGblGetPrec(paddr, precision);
     return 0;
 }
@@ -90,12 +95,21 @@ static long special(dbAddr *paddr, int after)
     ditherRecord *prec = (ditherRecord *)paddr->precord;
     int fieldIndex = dbGetFieldIndex(paddr);
     if (!after) return 0;
-    if (fieldIndex == ditherRecordPLUS && !(prec->plus >= 0)) {
-        prec->plus = 0;
+    if (fieldIndex == ditherRecordABS) {
+        double half = prec->abs >= 0 ? prec->abs / 2 : 0;
+        prec->abs = 2 * half;
+        prec->plus = half;
+        prec->minus = half;
+        db_post_events(prec, &prec->abs, DBE_VALUE | DBE_LOG);
         db_post_events(prec, &prec->plus, DBE_VALUE | DBE_LOG);
-    } else if (fieldIndex == ditherRecordMINUS && !(prec->minus >= 0)) {
-        prec->minus = 0;
         db_post_events(prec, &prec->minus, DBE_VALUE | DBE_LOG);
+    } else if (fieldIndex == ditherRecordPLUS || fieldIndex == ditherRecordMINUS) {
+        if (!(prec->plus >= 0)) prec->plus = 0;
+        if (!(prec->minus >= 0)) prec->minus = 0;
+        prec->abs = prec->plus + prec->minus;
+        db_post_events(prec, &prec->plus, DBE_VALUE | DBE_LOG);
+        db_post_events(prec, &prec->minus, DBE_VALUE | DBE_LOG);
+        db_post_events(prec, &prec->abs, DBE_VALUE | DBE_LOG);
     }
     return 0;
 }
@@ -104,7 +118,8 @@ static long get_control_double(const struct dbAddr *paddr,
                                struct dbr_ctrlDouble *pcd)
 {
     int fieldIndex = dbGetFieldIndex(paddr);
-    if (fieldIndex == ditherRecordPLUS || fieldIndex == ditherRecordMINUS) {
+    if (fieldIndex == ditherRecordPLUS || fieldIndex == ditherRecordMINUS ||
+        fieldIndex == ditherRecordABS) {
         /* 0..0 would read as "no limits" to clients, so give a real upper bound */
         pcd->lower_ctrl_limit = 0;
         pcd->upper_ctrl_limit = DBL_MAX;
@@ -123,6 +138,7 @@ static long init_record(struct dbCommon *pcommon, int pass)
         return -1;
     }
     prec->udf = FALSE;
+    prec->abs = prec->plus + prec->minus;
     return 0;
 }
 
@@ -150,10 +166,10 @@ static int put_double(ditherRecord *prec, DBLINK *link, double value)
 
 static int all_links_local(ditherRecord *prec)
 {
-    DBLINK *links[] = { &prec->mstp, &prec->mval, &prec->mvel, &prec->mvbs,
+    DBLINK *links[] = { &prec->mstp, &prec->mrbv, &prec->mval, &prec->mvel, &prec->mvbs,
         &prec->mvmx, &prec->mdmv, &prec->mmvn, &prec->mllm, &prec->mhlm,
         &prec->mdll, &prec->mdhl, &prec->mmst, &prec->mset, &prec->mspm,
-        &prec->mlvi, &prec->mmis, &prec->mres };
+        &prec->mlvi, &prec->mmis, &prec->mres, &prec->mpre };
     size_t i;
     for (i = 0; i < sizeof(links) / sizeof(links[0]); ++i)
         if (links[i]->type != DB_LINK) return 0;
@@ -165,6 +181,7 @@ static int read_motor(ditherRecord *prec, Motor *m)
     double dllm, dhlm;
     long bad = 0;
     bad |= dbGetLink(&prec->mval, DBR_DOUBLE, &m->val, 0, 0);
+    bad |= dbGetLink(&prec->mrbv, DBR_DOUBLE, &m->rbv, 0, 0);
     bad |= dbGetLink(&prec->mvel, DBR_DOUBLE, &m->velo, 0, 0);
     bad |= dbGetLink(&prec->mvbs, DBR_DOUBLE, &m->vbas, 0, 0);
     bad |= dbGetLink(&prec->mvmx, DBR_DOUBLE, &m->vmax, 0, 0);
@@ -199,11 +216,12 @@ static int motor_faulted(const Motor *m)
 
 static void run(ditherRecord *prec, Dither *d, const Motor *m)
 {
-    int enabled = prec->val != 0;
+    int enabled = d->enabled;
     int done = m->dmov, moving = m->movn;
     double positive = prec->plus, negative = prec->minus;
     double velocity = prec->velo, lo, hi;
     epicsInt32 stop = 1;
+    int was_fault = d->phase == FAULT;
 
     if (d->phase != IDLE && d->phase != FAULT &&
         (motor_faulted(m) || (done && m->miss)))
@@ -230,6 +248,7 @@ static void run(ditherRecord *prec, Dither *d, const Motor *m)
             fail(prec, d, "Invalid limits or center");
         } else {
             d->center = m->val;
+            d->target = m->val;
             d->plus = positive;
             d->minus = negative;
             d->old_velocity = m->velo;
@@ -238,6 +257,8 @@ static void run(ditherRecord *prec, Dither *d, const Motor *m)
             d->phase = DITHER;
             if (!put_double(prec, &prec->mvel, velocity))
                 fail(prec, d, "Cannot set dither velocity");
+            else
+                prec->err[0] = '\0';
         }
     }
 
@@ -253,6 +274,11 @@ static void run(ditherRecord *prec, Dither *d, const Motor *m)
                           d->center > m->hlm ||
                           ((d->target < m->llm || d->target > m->hlm) && !done))) {
             fail(prec, d, "Soft limits changed during move");
+        } else if (fabs(m->val - d->target) > m->mres / 2) {
+            /* VAL is not what we last commanded: the user moved the setpoint,
+             * so dither about the new one. Wait a cycle before commanding. */
+            d->center = m->val;
+            d->target = m->val;
         } else if (done && !moving) {
             lo = d->center - d->minus;
             hi = d->center + d->plus;
@@ -287,20 +313,18 @@ static void run(ditherRecord *prec, Dither *d, const Motor *m)
             d->owns_velocity = 0;
             d->phase = IDLE;
         }
+    } else if (was_fault && !enabled && done && !moving) {
+        /* A fault clears once dithering is disabled and the motor has stopped */
+        if (!d->owns_velocity || put_double(prec, &prec->mvel, d->old_velocity)) {
+            d->owns_velocity = 0;
+            d->phase = IDLE;
+        }
     }
-}
 
-static void acknowledge(ditherRecord *prec, Dither *d, const Motor *m)
-{
-    if (d->phase != FAULT) return;
-    if (prec->val)
-        errlogPrintf("%s: disable dithering before acknowledging fault\n", prec->name);
-    else if (!m->dmov || m->movn)
-        errlogPrintf("%s: wait for motor to stop before acknowledging fault\n", prec->name);
-    else if (!d->owns_velocity || put_double(prec, &prec->mvel, d->old_velocity)) {
-        d->owns_velocity = 0;
-        d->phase = IDLE;
-        prec->err[0] = '\0';
+    /* While not dithering, the center simply follows the motor setpoint */
+    if (d->phase == IDLE) {
+        d->center = m->val;
+        d->target = m->val;
     }
 }
 
@@ -310,12 +334,27 @@ static long process(struct dbCommon *pcommon)
     Dither *d = prec->dpvt;
     Motor m;
     char old_err[sizeof(prec->err)];
-    double old_cen = prec->cen;
+    double old_cen = prec->cen, old_val = prec->val;
+    int start = prec->start != 0, stop = prec->stop != 0;
     epicsEnum16 old_state = prec->state;
     unsigned short events;
-    int ack = prec->ack != 0;
 
+    memset(&m, 0, sizeof(m));
+    m.rbv = NAN;
     prec->pact = TRUE;
+    if (d) {
+        /* STOP wins over START. START is only accepted from Idle. */
+        if (stop) {
+            d->enabled = 0;
+        } else if (start) {
+            if (d->phase == IDLE)
+                d->enabled = 1;
+            else
+                errlogPrintf("%s: START ignored; dithering is %s (write STOP first)\n",
+                             prec->name, d->phase == FAULT ? "faulted" : "busy");
+        }
+    }
+    prec->start = prec->stop = 0;
     if (!d) {
         recGblSetSevr(prec, STATE_ALARM, INVALID_ALARM);
     } else {
@@ -326,9 +365,9 @@ static long process(struct dbCommon *pcommon)
             fail(prec, d, "Cannot read motor fields");
         } else {
             run(prec, d, &m);
-            if (ack) acknowledge(prec, d, &m);
         }
         prec->cen = d->center;
+        prec->val = isfinite(m.rbv) ? m.rbv - d->center : NAN;
         prec->state = d->phase == DITHER ? ditherSTAT_Dithering :
             (d->phase == STOPPING || d->phase == RETURNING ?
              ditherSTAT_Returning :
@@ -336,12 +375,14 @@ static long process(struct dbCommon *pcommon)
         if (d->phase == FAULT)
             recGblSetSevr(prec, STATE_ALARM, INVALID_ALARM);
     }
-    prec->ack = 0;
     recGblGetTimeStamp(prec);
 
     events = recGblResetAlarms(prec);
     if (events) db_post_events(prec, &prec->val, events);
-    if (ack) db_post_events(prec, &prec->ack, DBE_VALUE | DBE_LOG);
+    if (start) db_post_events(prec, &prec->start, DBE_VALUE | DBE_LOG);
+    if (stop) db_post_events(prec, &prec->stop, DBE_VALUE | DBE_LOG);
+    if (prec->val != old_val)
+        db_post_events(prec, &prec->val, DBE_VALUE | DBE_LOG);
     if (prec->state != old_state)
         db_post_events(prec, &prec->state, DBE_VALUE | DBE_LOG);
     if (prec->cen != old_cen)

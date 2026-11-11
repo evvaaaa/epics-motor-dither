@@ -1,8 +1,9 @@
 record(dither, "$(P):DITHER") {
     field(DESC, "Motor dithering")
     field(SCAN, ".1 second")
-    field(PREC, "$(PREC=4)")
+    field(MPRE, "$(MOTOR=$(P)).PREC NPP")
     field(MSTP, "$(MOTOR=$(P)).STOP PP")
+    field(MRBV, "$(MOTOR=$(P)).RBV NPP")
     field(MVAL, "$(MOTOR=$(P)).VAL PP")
     field(MVEL, "$(MOTOR=$(P)).VELO NPP")
     field(MVBS, "$(MOTOR=$(P)).VBAS NPP")
